@@ -3,27 +3,35 @@ const { Schema, model } = mongoose;
 
 const blogPostSchema = new Schema(
   {
-    category: {
-      type: String,
-    },
-    title: {
-      type: String,
-    },
-    cover: { type: String },
+    category: { type: String, required: false },
+    title: { type: String, required: false },
+    cover: { type: String, required: false },
     readTime: {
+      type: Object,
       value: {
         type: Number,
+        required: false,
       },
       unit: {
         type: String,
+        required: false,
       },
     },
     author: {
-      name: { type: String },
-      avatar: { type: String },
+      type: Object,
+      name: {
+        type: String,
+        required: false,
+      },
+      avatar: {
+        type: String,
+        required: false,
+      },
     },
-    content: String,
+    content: { type: String, required: false },
   },
-  { timeStamps: true }
+  {
+    timestamps: true,
+  }
 );
 export default model("BlogPost", blogPostSchema);

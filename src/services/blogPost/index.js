@@ -6,14 +6,16 @@ const blogPostRouter = express.Router();
 
 blogPostRouter.post("/", async (req, res, next) => {
   try {
-    const newBlogPost = new BlogPostModel(req.body);
-    const { _id } = await newBlogPost.save();
-    res.send({ _id });
+    const newBlogPost = new BlogPostModel(req.body); // mongoose validation
+    const post = await newBlogPost.save();
+    console.log(newBlogPost);
+    res.status(201).send(post);
   } catch (err) {
     console.log(err);
     next(err);
   }
 });
+
 blogPostRouter.get("/", async (req, res, next) => {
   try {
     const blogPosts = await BlogPostModel.find();
@@ -23,6 +25,7 @@ blogPostRouter.get("/", async (req, res, next) => {
     next(err);
   }
 });
+
 blogPostRouter.get("/:postId", async (req, res, next) => {
   try {
     const blogPost = await BlogPostModel.findById(req.params.postId);
@@ -36,6 +39,7 @@ blogPostRouter.get("/:postId", async (req, res, next) => {
     next(err);
   }
 });
+
 blogPostRouter.put("/:postId", async (req, res, next) => {
   try {
     const blogPost = await BlogPostModel.findByIdAndUpdate(
@@ -50,6 +54,7 @@ blogPostRouter.put("/:postId", async (req, res, next) => {
     next(err);
   }
 });
+
 blogPostRouter.delete("/:postId", async (req, res, next) => {
   try {
     const blogPost = await BlogPostModel.findByIdAndDelete(req.params.postId);

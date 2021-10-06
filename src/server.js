@@ -9,16 +9,24 @@ import {
 } from "./errorHandlers/errorHandlers.js";
 
 import blogPostRouter from "./services/blogPost/index.js";
-
 const server = express();
+
 const { PORT = 5000 } = process.env;
 server.use(cors());
-
+server.use(express.json());
 server.use("/blog", blogPostRouter);
 
 server.use(notFoundHandler);
 server.use(badRequestHandler);
 server.use(genericErrorHandler);
+
+// mongoose.connect(process.env.MONGODB);
+
+// mongoose.connection.on("connected", () => {
+//   server.listen(PORT, async () => {
+//     console.log("Server is listening on port " + PORT);
+//   });
+// });
 
 server.listen(PORT, async () => {
   // connect to mongoose Server
