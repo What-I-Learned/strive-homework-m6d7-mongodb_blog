@@ -1,70 +1,81 @@
-import express from "express";
-import createHttpError from "http-errors";
-import BlogPostModel from "../../models/blogPost.js";
-
-const commentRouter = express.Router();
-
-commentRouter.post("/:postId", async (req, res, next) => {
+export const deleteComment = async (req, res, next) => {
   try {
-    //   1. find post by id
-    const blogPost = await BlogPostModel.findById(req.body.blogPostId, {
-      _id: 0,
-    }); // projection
+    // get blogPost
+    const blogPost = await BlogPostModel.findByIdAndUpdate(
+      req.params.postId,
+      { $pull: { comments: { _id: req.params.commentId } } }, // HOW
+      { new: true } // options
+    );
     if (blogPost) {
-      console.log(blogPost);
-      // 2. add a comment to the blog
-      // blogPost is a mongoose document not a normalObject therefore we need to parse it
-      const commentToInsert = {
-        ...blogPost.toObject(),
-        commentDate: new Date(),
-      };
-      //   3.update the specified record by pushing comment to the history
-      const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
-        req.params.postId, // what to modify
-        { $push: { commentHistory: commentToInsert } }, // how to modify
-        { new: true }
+      res.send(blogPost);
+    } else {
+      next(
+        createHttpError(
+          404,
+          `Comment with id ${req.params.commentId} not found!`
+        )
       );
-
-      updatedBlogPost
-        ? res.send(updatedBlogPost)
-        : next(createHttpError(404, "Not found"));
     }
   } catch (err) {
     console.log(err);
     next(err);
   }
-});
+};
 
-commentRouter.get("/", async (req, res, next) => {
+export const editComment = async (req, res, next) => {
   try {
+    // get blogPost
+    const blogPost = await BlogPostModel.findById(req.params.postId);
+    if (blogPost) {
+      const commentIndex = blogPost.comments.findIndex(
+        (comment) => comment._id.toString() === req.params.commentId
+      );
+      if (commentIndex !== -1) {
+        blogPost.comments[commentIndex] = {
+          ...blogPost.comments[commentIndex].toObject(),
+          ...req.body,
+        };
+
+        await blogPost.save();
+        res.send(blogPost[commentIndex]);
+      }
+    } else {
+      next(createHttpError(404, "Not found"));
+    }
   } catch (err) {
     console.log(err);
     next(err);
   }
-});
+};
 
-commentRouter.get("/", async (req, res, next) => {
+export const getOneComment = async (req, res, next) => {
   try {
+    // get blogPost
+    const blogPost = await BlogPostModel.findById(req.params.postId);
+    if (blogPost) {
+      const comment = blogPost.comments.find(
+        (comment) => comment._id.toString() === req.params.commentId
+      );
+      comment ? res.send(comment) : next(createHttpError(404, "Not found"));
+    } else {
+      next(createHttpError(404, "Not found"));
+    }
   } catch (err) {
     console.log(err);
     next(err);
   }
-});
+};
 
-commentRouter.put("/", async (req, res, next) => {
+export const getComments = async (req, res, next) => {
   try {
+    const blogPost = await BlogPostModel.findById(req.params.postId);
+    if (blogPost) {
+      res.send(blogPost.comments);
+    } else {
+      next(createHttpError(404, "Not found"));
+    }
   } catch (err) {
     console.log(err);
     next(err);
   }
-});
-
-commentRouter.delete("/", async (req, res, next) => {
-  try {
-  } catch (err) {
-    console.log(err);
-    next(err);
-  }
-});
-
-export default commentRouter;
+};

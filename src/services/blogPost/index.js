@@ -1,6 +1,7 @@
 import express from "express";
 import createHttpError from "http-errors";
 import BlogPostModel from "../../models/blogPost.js";
+import 
 
 const blogPostRouter = express.Router();
 
@@ -96,7 +97,7 @@ blogPostRouter.post("/:postId", async (req, res, next) => {
 });
 
 // refactor later
-const addComment = async (req, res, next) => {
+const getComments = async (req, res, next) => {
   try {
     const blogPost = await BlogPostModel.findById(req.params.postId);
     if (blogPost) {
@@ -110,7 +111,7 @@ const addComment = async (req, res, next) => {
   }
 };
 
-blogPostRouter.get("/:postId/comments", addComment);
+blogPostRouter.get("/:postId/comments", getComments);
 
 const getOneComment = async (req, res, next) => {
   try {
