@@ -1,6 +1,35 @@
 import BlogPostModel from "../../models/blogPost.js";
 
-export const deleteComment = async (req, res, next) => {
+const postComment = async (req, res, next) => {
+  try {
+    // find a post to post a comment on
+    const blogPost = await BlogPostModel.findById(req.params.postId, {
+      _id: 0,
+    });
+    if (blogPost) {
+      const commentToInsert = {
+        ...req.body,
+        asin: req.params.postId,
+        commentDate: new Date(),
+      };
+
+      await BlogPostModel.findByIdAndUpdate(
+        req.params.postId,
+        { $push: { comments: commentToInsert } },
+        { new: true }
+      );
+
+      res.send(commentToInsert);
+    } else {
+      res.send(createHttpError(404, "Not found"));
+    }
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+};
+
+const deleteComment = async (req, res, next) => {
   try {
     // get blogPost
     const blogPost = await BlogPostModel.findByIdAndUpdate(
@@ -9,7 +38,7 @@ export const deleteComment = async (req, res, next) => {
       { new: true } // options
     );
     if (blogPost) {
-      res.send(blogPost);
+      res.send("deleted");
     } else {
       next(
         createHttpError(
@@ -24,7 +53,7 @@ export const deleteComment = async (req, res, next) => {
   }
 };
 
-export const editComment = async (req, res, next) => {
+const editComment = async (req, res, next) => {
   try {
     // get blogPost
     const blogPost = await BlogPostModel.findById(req.params.postId);
@@ -39,7 +68,7 @@ export const editComment = async (req, res, next) => {
         };
 
         await blogPost.save();
-        res.send(blogPost[commentIndex]);
+        res.send(blogPost.comments[commentIndex]);
       }
     } else {
       next(createHttpError(404, "Not found"));
@@ -50,7 +79,7 @@ export const editComment = async (req, res, next) => {
   }
 };
 
-export const getOneComment = async (req, res, next) => {
+const getOneComment = async (req, res, next) => {
   try {
     // get blogPost
     const blogPost = await BlogPostModel.findById(req.params.postId);
@@ -68,7 +97,7 @@ export const getOneComment = async (req, res, next) => {
   }
 };
 
-export const getComments = async (req, res, next) => {
+const getComments = async (req, res, next) => {
   try {
     const blogPost = await BlogPostModel.findById(req.params.postId);
     if (blogPost) {
@@ -83,6 +112,7 @@ export const getComments = async (req, res, next) => {
 };
 
 export default {
+  postComment,
   deleteComment,
   editComment,
   getOneComment,
