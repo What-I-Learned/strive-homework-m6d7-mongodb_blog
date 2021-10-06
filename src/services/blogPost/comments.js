@@ -1,3 +1,5 @@
+import BlogPostModel from "../../models/blogPost.js";
+
 export const deleteComment = async (req, res, next) => {
   try {
     // get blogPost
@@ -78,4 +80,11 @@ export const getComments = async (req, res, next) => {
     console.log(err);
     next(err);
   }
+};
+
+export default {
+  deleteComment,
+  editComment,
+  getOneComment,
+  getComments,
 };

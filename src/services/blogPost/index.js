@@ -1,8 +1,9 @@
 import express from "express";
 import createHttpError from "http-errors";
 import BlogPostModel from "../../models/blogPost.js";
-import 
+import comments from "./comments.js";
 
+const { deleteComment, editComment, getOneComment, getComments } = comments;
 const blogPostRouter = express.Router();
 
 blogPostRouter.post("/", async (req, res, next) => {
@@ -96,94 +97,12 @@ blogPostRouter.post("/:postId", async (req, res, next) => {
   }
 });
 
-// refactor later
-const getComments = async (req, res, next) => {
-  try {
-    const blogPost = await BlogPostModel.findById(req.params.postId);
-    if (blogPost) {
-      res.send(blogPost.comments);
-    } else {
-      next(createHttpError(404, "Not found"));
-    }
-  } catch (err) {
-    console.log(err);
-    next(err);
-  }
-};
-
 blogPostRouter.get("/:postId/comments", getComments);
-
-const getOneComment = async (req, res, next) => {
-  try {
-    // get blogPost
-    const blogPost = await BlogPostModel.findById(req.params.postId);
-    if (blogPost) {
-      const comment = blogPost.comments.find(
-        (comment) => comment._id.toString() === req.params.commentId
-      );
-      comment ? res.send(comment) : next(createHttpError(404, "Not found"));
-    } else {
-      next(createHttpError(404, "Not found"));
-    }
-  } catch (err) {
-    console.log(err);
-    next(err);
-  }
-};
 
 blogPostRouter.get("/:postId/comments/:commentId", getOneComment);
 
-const editComment = async (req, res, next) => {
-  try {
-    // get blogPost
-    const blogPost = await BlogPostModel.findById(req.params.postId);
-    if (blogPost) {
-      const commentIndex = blogPost.comments.findIndex(
-        (comment) => comment._id.toString() === req.params.commentId
-      );
-      if (commentIndex !== -1) {
-        blogPost.comments[commentIndex] = {
-          ...blogPost.comments[commentIndex].toObject(),
-          ...req.body,
-        };
-
-        await blogPost.save();
-        res.send(blogPost[commentIndex]);
-      }
-    } else {
-      next(createHttpError(404, "Not found"));
-    }
-  } catch (err) {
-    console.log(err);
-    next(err);
-  }
-};
-
 blogPostRouter.put("/:postId/comments/:commentId", editComment);
 
-const deleteComment = async (req, res, next) => {
-  try {
-    // get blogPost
-    const blogPost = await BlogPostModel.findByIdAndUpdate(
-      req.params.postId,
-      { $pull: { comments: { _id: req.params.commentId } } }, // HOW
-      { new: true } // options
-    );
-    if (blogPost) {
-      res.send(blogPost);
-    } else {
-      next(
-        createHttpError(
-          404,
-          `Comment with id ${req.params.commentId} not found!`
-        )
-      );
-    }
-  } catch (err) {
-    console.log(err);
-    next(err);
-  }
-};
-blogPostRouter.put("/:postId/comments/:commentId", deleteComment);
+blogPostRouter.delete("/:postId/comments/:commentId", deleteComment);
 
 export default blogPostRouter;
