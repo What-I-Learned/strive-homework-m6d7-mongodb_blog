@@ -9,6 +9,8 @@ import {
 } from "./errorHandlers/errorHandlers.js";
 
 import blogPostRouter from "./services/blogPost/index.js";
+// import commentRouter from "./services/blogPost/comments.js";
+
 const server = express();
 
 const { PORT = 5000 } = process.env;
