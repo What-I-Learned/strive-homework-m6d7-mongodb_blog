@@ -32,8 +32,9 @@ const blogPostSchema = new Schema(
     author: { type: Schema.Types.ObjectId, ref: "User" }, // case sensitive
     content: { type: String, required: false },
     comments: [commentSchema],
-    likes: Number,
+    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
+
   {
     timestamps: true,
   }
@@ -46,7 +47,7 @@ blogPostSchema.static("findBlogPostWithAuthor", async function (mongoQuery) {
     .limit(mongoQuery.options.limit || 10)
     .skip(mongoQuery.options.skip)
     .sort(mongoQuery.options.sort)
-    .populate({ path: "author" });
+    .populate({ path: "author", select: "name last_name" });
 
   return { total, posts };
 });

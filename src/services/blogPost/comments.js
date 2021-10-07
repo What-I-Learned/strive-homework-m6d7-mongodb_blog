@@ -1,5 +1,5 @@
 import BlogPostModel from "../../models/blogPost.js";
-
+import createHttpError from "http-errors";
 const postComment = async (req, res, next) => {
   try {
     // find a post to post a comment on
@@ -85,7 +85,7 @@ const getOneComment = async (req, res, next) => {
     const blogPost = await BlogPostModel.findById(req.params.postId);
     if (blogPost) {
       const comment = blogPost.comments.find(
-        (comment) => comment._id.toString() === req.params.commentId
+        (c) => c._id.toString() === req.params.commentId
       );
       comment ? res.send(comment) : next(createHttpError(404, "Not found"));
     } else {

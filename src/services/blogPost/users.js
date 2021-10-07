@@ -18,7 +18,10 @@ userRouter.get("/", async (req, res, next) => {
 
 userRouter.get("/:userID", async (req, res, next) => {
   try {
-    const singleUser = await UserModel.findById(req.params.userID);
+    const singleUser = await UserModel.findById(req.params.userID).populate({
+      path: "posts",
+      select: "title cover category",
+    });
     singleUser
       ? res.send(singleUser)
       : next(

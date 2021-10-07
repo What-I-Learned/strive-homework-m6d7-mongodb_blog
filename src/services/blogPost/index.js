@@ -43,9 +43,12 @@ blogPostRouter.get("/", async (req, res, next) => {
 
 blogPostRouter.get("/:postId", async (req, res, next) => {
   try {
-    const blogPost = await BlogPostModel.findById(req.params.postId).populate({
-      path: "author",
-    });
+    const blogPost = await BlogPostModel.findById(req.params.postId)
+      .populate({
+        path: "author",
+        select: "name last_name",
+      })
+      .populate({ path: "likes", select: "name last_name" });
     blogPost
       ? res.send(blogPost)
       : next(
@@ -96,12 +99,39 @@ blogPostRouter.delete("/:postId/comments/:commentId", deleteComment);
 //likes
 blogPostRouter.post("/:postId/addLike", async (req, res, next) => {
   try {
-    const blogPost = await BlogPostModel.findOneAndUpdate(
-      { _id: req.params.postId },
-      { $inc: { likes: 1 } },
-      { new: true }
-    );
-    res.send(blogPost);
+    // check if the post exists
+    const isLiked = await BlogPostModel.findOne({
+      _id: req.params.postId.toString(),
+      likes: req.body.liked_by,
+    });
+    console.log(req.body.liked_by);
+    if (isLiked) {
+      // for learning purposes
+      // console.log("is liked");
+      // const find_id = await BlogPostModel.findById(req.params.postId);
+      // const like_index = find_id.likes.findIndex(
+      //   (i) => i._id.toString() === req.body.liked_by
+      // );
+      // console.log(like_index);
+      const like_update = await BlogPostModel.findByIdAndUpdate(
+        req.params.postId,
+        { $pull: { likes: req.body.liked_by } },
+        { new: true }
+      );
+      res.send(like_update);
+    } else {
+      console.log("not liked before");
+
+      const newLike = await UserModel.findById(req.body.liked_by);
+      console.log(newLike);
+
+      await BlogPostModel.findByIdAndUpdate(
+        req.params.postId,
+        { $push: { likes: req.body.liked_by } },
+        { new: true }
+      );
+      res.send("worked");
+    }
   } catch (err) {
     next(err);
   }
