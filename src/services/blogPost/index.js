@@ -1,7 +1,9 @@
 import express from "express";
 import createHttpError from "http-errors";
 import BlogPostModel from "../../models/blogPost.js";
+import UserModel from "../../models/user.js";
 import comments from "./comments.js";
+import q2m from "query-to-mongo";
 
 const { deleteComment, editComment, getOneComment, getComments, postComment } =
   comments;
@@ -12,7 +14,14 @@ blogPostRouter.post("/", async (req, res, next) => {
   try {
     const newBlogPost = new BlogPostModel(req.body); // mongoose validation
     const post = await newBlogPost.save();
-    console.log(newBlogPost);
+
+    // find author by id
+    await UserModel.findByIdAndUpdate(
+      post.author._id.toString(),
+      { $push: { posts: newBlogPost } },
+      { new: true }
+    );
+
     res.status(201).send(post);
   } catch (err) {
     console.log(err);
@@ -22,7 +31,9 @@ blogPostRouter.post("/", async (req, res, next) => {
 
 blogPostRouter.get("/", async (req, res, next) => {
   try {
-    const blogPosts = await BlogPostModel.find();
+    const mongoQuery = q2m(req.query);
+    const blogPosts = await BlogPostModel.findBlogPostWithAuthor(mongoQuery);
+
     res.send(blogPosts);
   } catch (err) {
     console.log(err);
@@ -32,7 +43,9 @@ blogPostRouter.get("/", async (req, res, next) => {
 
 blogPostRouter.get("/:postId", async (req, res, next) => {
   try {
-    const blogPost = await BlogPostModel.findById(req.params.postId);
+    const blogPost = await BlogPostModel.findById(req.params.postId).populate({
+      path: "author",
+    });
     blogPost
       ? res.send(blogPost)
       : next(
@@ -79,5 +92,19 @@ blogPostRouter.get("/:postId/comments/:commentId", getOneComment);
 blogPostRouter.put("/:postId/comments/:commentId", editComment);
 
 blogPostRouter.delete("/:postId/comments/:commentId", deleteComment);
+
+//likes
+blogPostRouter.post("/:postId/addLike", async (req, res, next) => {
+  try {
+    const blogPost = await BlogPostModel.findOneAndUpdate(
+      { _id: req.params.postId },
+      { $inc: { likes: 1 } },
+      { new: true }
+    );
+    res.send(blogPost);
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default blogPostRouter;
